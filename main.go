@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -19,6 +18,9 @@ import (
 	"strings"
 	"syscall"
 
+	"fyne.io/fyne/app"
+	"fyne.io/fyne/dialog"
+	"fyne.io/fyne/widget"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -30,9 +32,6 @@ type conf struct {
 }
 
 func main() {
-	flagSetConf := flag.Bool("config", false, "set configuration")
-	flag.Parse()
-
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Printf("Error getting user home directory: %s", err)
@@ -40,80 +39,113 @@ func main() {
 	}
 
 	confPath := fmt.Sprintf("%s\\.stsconf", homeDir)
+	conf := &conf{}
 
-	if *flagSetConf {
-		fmt.Println("Enter your Streamable credentials")
+	if _, err := os.Stat(confPath); err == nil {
+		b, _ := ioutil.ReadFile(confPath)
+		json.Unmarshal(b, conf)
+	}
 
-		for {
-			email := userInput("Email", false)
-			password := userInput("Password", true)
+	app := app.New()
 
-			err = checkAuth(httpClient, email, password)
-			if err != nil {
-				fmt.Printf("Authentication failed. Try again or press Control-C to exit.\n\n")
-				continue
+	w := app.NewWindow("STS")
+	w.SetFixedSize(true)
+
+	if len(os.Args) > 1 {
+		uploaded := false
+
+		filename := widget.NewEntry()
+		filename.SetText(os.Args[1])
+		filename.Disable()
+		title := widget.NewEntry()
+		videoURL := widget.NewEntry()
+		videoURL.Disable()
+
+		form := &widget.Form{
+			OnSubmit: func() {
+				if len(conf.Email) == 0 || len(conf.Password) == 0 {
+					dialog.NewInformation("", "Missing Streamable credentials.", w).Show()
+					return
+				}
+
+				if uploaded {
+					dialog.NewInformation("", "Video has already been uploaded.", w).Show()
+					return
+				}
+
+				url, err := uploadVideo(httpClient, conf.Email, conf.Password, filename.Text, title.Text)
+				if err != nil {
+					dialog.NewInformation("", "Error uploading video", w).Show()
+					return
+				}
+
+				uploaded = true
+				videoURL.SetText(url)
+				videoURL.Enable()
+			},
+		}
+
+		form.Append("Filename", filename)
+		form.Append("Title", title)
+		form.Append("Video URL", videoURL)
+
+		w.Canvas().Focus(title)
+
+		w.SetContent(widget.NewVBox(
+			form,
+		))
+
+		w.ShowAndRun()
+		return
+	}
+
+	email := widget.NewEntry()
+	email.SetPlaceHolder("you@somewhere.com")
+	password := widget.NewPasswordEntry()
+	password.SetPlaceHolder("Password")
+
+	form := &widget.Form{
+		OnSubmit: func() {
+			if len(email.Text) == 0 || len(password.Text) == 0 {
+				return
 			}
 
-			c := conf{
-				Email:    email,
-				Password: password,
+			err = checkAuth(httpClient, email.Text, password.Text)
+			if err != nil {
+				dialog.NewInformation("", "Invalid credentials.", w).Show()
+				return
 			}
 
-			b, err := json.Marshal(c)
+			conf.Email = email.Text
+			conf.Password = password.Text
+
+			b, err := json.Marshal(conf)
 			if err != nil {
-				fmt.Println("Error marshaling configuration JSON")
-				os.Exit(1)
+				dialog.NewInformation("", "Error marshaling JSON", w).Show()
+				return
 			}
 
 			err = ioutil.WriteFile(confPath, b, 0600)
 			if err != nil {
-				fmt.Printf("Error writing configuration file file: %s", err)
-				os.Exit(1)
+				dialog.NewInformation("", "Error writing configuration file", w).Show()
+				return
 			}
 
-			fmt.Println("Configuration successfully saved. Press Enter to exit.")
-
-			reader := bufio.NewReader(os.Stdin)
-			reader.ReadString('\n')
-
-			os.Exit(0)
-		}
+			dialog.NewInformation("", "STS is now configured.", w).Show()
+		},
 	}
 
-	b, err := ioutil.ReadFile(confPath)
-	if err != nil {
-		fmt.Println("Error reading configuration file")
-		os.Exit(1)
-	}
+	form.Append("Email", email)
+	form.Append("Password", password)
 
-	conf := &conf{}
-	err = json.Unmarshal(b, conf)
-	if err != nil {
-		fmt.Printf("Error unmarshaling configuration JSON")
-		os.Exit(1)
-	}
+	w.Canvas().Focus(email)
 
-	if len(os.Args) < 1 {
-		os.Exit(0)
-	}
+	w.SetContent(widget.NewVBox(
+		widget.NewLabel("Enter your Streamable email and password and click Submit."),
+		form,
+	))
 
-	filename := os.Args[1]
-
-	title := userInput("Video Title", false)
-
-	fmt.Printf("Uploading video: %s\n\n", filename)
-
-	u, err := uploadVideo(httpClient, conf.Email, conf.Password, filename, title)
-	if err != nil {
-		fmt.Printf("Error uploading video: %s", err)
-		os.Exit(1)
-	}
-
-	fmt.Printf("Video URL: %s\n", u)
-	fmt.Printf("\nPress Enter to exit\n")
-
-	reader := bufio.NewReader(os.Stdin)
-	reader.ReadString('\n')
+	w.ShowAndRun()
 }
 
 func userInput(label string, password bool) string {

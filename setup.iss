@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "STS"
-#define MyAppVersion "1.0"
+#define MyAppVersion "1.1"
 #define MyAppExeName "send-to-streamable.exe"
 
 [Setup]
@@ -32,6 +32,6 @@ Source: "C:\dev\send-to-streamable\send-to-streamable.exe"; DestDir: "{app}"; Fl
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{autoprograms}\Configure {#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Parameters: "-config"
-Name: "{autodesktop}\Configure {#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Parameters: "-config"; Tasks: desktopicon
+Name: "{autoprograms}\Configure {#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{autodesktop}\Configure {#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 Name: "{usersendto}\Streamable"; Filename: "{app}\{#MyAppExeName}"
