@@ -1,6 +1,11 @@
 ﻿# send-to-streamable
 
-## Setup Instructions:
+Send To Streamable or STS is a utility that adds Streamable to the Windows Send to menu. This allows for easy uploading of videos to Streamable without opening the browser.
+
+## Download
+v1.1 [sts-setup.exe](https://github.com/fterrag/send-to-streamable/releases/download/v1.1/sts-setup.exe)
+
+## Setup Instructions
 * If you haven't already, sign up for a Streamable account at https://streamable.com/signup
 * Run sts-setup.exe
 * After setup is complete, run "Configure STS" from your desktop or Start menu.
