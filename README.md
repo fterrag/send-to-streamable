@@ -15,7 +15,7 @@ v1.1 [sts-setup.exe](https://github.com/fterrag/send-to-streamable/releases/down
 ## Screenshots
 
 ### Configuration
-![STS 4_10_2020 7_27_42 PM](https://user-images.githubusercontent.com/22901700/79029305-cf688880-7b61-11ea-94f2-2ab527f83216.png)
+![Capture](https://user-images.githubusercontent.com/22901700/79036821-f5aa1a80-7b99-11ea-945a-43c0d4ab6871.PNG)
 
 ### Upload
-![STS 4_10_2020 7_28_34 PM](https://user-images.githubusercontent.com/22901700/79029309-d099b580-7b61-11ea-8384-03ad8ebd3337.png)
+![Capture 2](https://user-images.githubusercontent.com/22901700/79036823-f6db4780-7b99-11ea-8828-7e4791eaae70.PNG)
